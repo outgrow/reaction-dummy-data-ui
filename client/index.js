@@ -14,5 +14,5 @@ registerOperatorRoute({
   path: "/dummy-data",
   // eslint-disable-next-line react/display-name
   SidebarIconComponent: (props) => <CodeBracesBox {...props} />,
-  sidebarI18nLabel: "dummyData.sidebarLabel"
+  sidebarI18nLabel: "dummyDataSetting.sidebarLabel"
 });
