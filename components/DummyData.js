@@ -7,7 +7,6 @@ import { Components } from "@reactioncommerce/reaction-components";
 import { Reaction } from "/client/api";
 import PrimaryAppBar from "/imports/client/ui/components/PrimaryAppBar/PrimaryAppBar";
 import { loadOrders, loadProductImages, loadProductsAndTags, removeAllData } from "../mutations";
-import withShop from "/imports/plugins/core/graphql/lib/hocs/withShop";
 
 const RightAlignedGrid = styled(Grid)`
   text-align: right;
@@ -307,4 +306,4 @@ class DummyData extends Component {
   }
 }
 
-export default withShop(DummyData);
+export default DummyData;
