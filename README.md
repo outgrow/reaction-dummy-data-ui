@@ -1,6 +1,8 @@
 # reaction-dummy-data-ui
 
-A user interface for [@outgrow/reaction-dummy-data](https://github.com/outgrow/reaction-dummy-data).
+A user interface for [`@outgrow/reaction-dummy-data`](https://github.com/outgrow/reaction-dummy-data).
+
+![Screenshot of the UI](https://raw.githubusercontent.com/outgrow/reaction-dummy-data-ui/master/screenshot.png)
 
 ## How to use
 
