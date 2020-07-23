@@ -5,8 +5,7 @@ import { registerOperatorRoute } from "/imports/client/ui";
 import { DummyData } from "../components";
 
 registerOperatorRoute({
-  isNavigationLink: true,
-  isSetting: false,
+  group: "navigation",
   mainComponent: DummyData,
   hocs: [
     withApollo
