@@ -6,7 +6,9 @@ A user interface for [`@outgrow/reaction-dummy-data`](https://github.com/outgrow
 
 ## How to use
 
-Open a terminal in your `reaction-admin` project's `/imports/plugins/custom` directory.
+Open a terminal in your `reaction-development-platform` root directory. Run `make dev-link-reaction-admin` to ensure that `reaction-admin` is running in development mode. Without development mode enabled, changes made to the project's local files won't be built and won't take effect.
+
+Once development mode is enabled, `cd` into your `reaction-admin` project's `/imports/plugins/custom` directory.
 
 Clone the plugin:
 
