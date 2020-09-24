@@ -1,10 +1,12 @@
-import React, { Component, Fragment } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import styled from "styled-components";
+import { useApolloClient } from "@apollo/react-hooks";
 import { Card, CardActions, CardHeader, CardContent, Grid } from "@material-ui/core";
 import Button from "@reactioncommerce/catalyst/Button";
 import Toast from "@reactioncommerce/catalyst/Toast"
 import { Components } from "@reactioncommerce/reaction-components";
-import { Reaction } from "/client/api";
+import useCurrentShopId from "/imports/client/ui/hooks/useCurrentShopId";
+import decodeOpaqueIdForNamespace from "/imports/utils/decodeOpaqueIdForNamespace.js";
 import PrimaryAppBar from "/imports/client/ui/components/PrimaryAppBar/PrimaryAppBar";
 import { loadOrders, loadProductImages, loadProductsAndTags, removeAllData } from "../mutations";
 
@@ -12,159 +14,142 @@ const RightAlignedGrid = styled(Grid)`
   text-align: right;
 `;
 
-class DummyData extends Component {
-  constructor() {
-    super();
+function DummyData() {
+  const [desiredProductCount, setDesiredProductCount] = useState(0);
+  const [desiredTagCount, setDesiredTagCount] = useState(0);
+  const [desiredOrderCount, setDesiredOrderCount] = useState(0);
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState("info");
+  const [currentShopId, setCurrentShopId] = useState("");
 
-    this.state = {
-      desiredProductCount: 0,
-      desiredTagCount: 0,
-      desiredOrderCount: 0,
-      isToastOpen: false,
-      toastMessage: "",
-      toastVariant: "info"
-    };
-  }
+  const apolloClient = useApolloClient();
 
-  handleCloseToast = () => this.setState({
-    isToastOpen: false
-  });
+  const [currentOpaqueShopId] = useCurrentShopId();
 
-  handleInputChange = (field, event) => this.setState({
-    [field]: parseInt(event.target.value)
-  });
+  console.log(currentOpaqueShopId);
 
-  handleGenerateProductsAndTags = async () => {
-    const { client } = this.props;
-    const { desiredProductCount, desiredTagCount } = this.state;
+  useEffect(() => {
+    async function decodeAndSetShopId(shopId) {
+      const decodedShopId = await decodeOpaqueIdForNamespace("reaction/shop", shopId);
 
+      if (decodedShopId !== currentOpaqueShopId) {
+        setCurrentShopId(decodedShopId);
+      }
+    }
+
+    if (currentOpaqueShopId.length > 0) {
+      decodeAndSetShopId(currentOpaqueShopId);
+    }
+  }, [currentOpaqueShopId]);
+
+  const handleGenerateProductsAndTags = async () => {
     try {
       const {
         data: {
           loadProductsAndTags: payload
         }
-      } = await client.mutate({
+      } = await apolloClient.mutate({
         mutation: loadProductsAndTags,
         variables: {
           input: {
-            shopId: Reaction.getShopId(),
-            desiredProductCount,
-            desiredTagCount
+            shopId: currentShopId,
+            desiredProductCount: parseInt(desiredProductCount),
+            desiredTagCount: parseInt(desiredTagCount)
           }
         }
       });
 
-      this.setState({
-        isToastOpen: true,
-        toastMessage: `Successfully created ${payload.productsCreated} product${payload.productsCreated > 1 ? "s" : ""} and ${payload.tagsCreated} tag${payload.tagsCreated > 1 ? "s" : ""}.`,
-        toastVariant: "success"
-      });
+      setIsToastOpen(true);
+      setToastMessage(`Successfully created ${payload.productsCreated} product${payload.productsCreated > 1 ? "s" : ""} and ${payload.tagsCreated} tag${payload.tagsCreated > 1 ? "s" : ""}.`);
+      setToastVariant("success");
     } catch (err) {
-      this.setState({
-        isToastOpen: true,
-        toastMessage: err.message,
-        toastVariant: "error"
-      });
+      setIsToastOpen(true);
+      setToastMessage(err.message);
+      setToastVariant("error");
     }
   };
 
-  handleGenerateOrders = async () => {
-    const { client } = this.props;
-    const { desiredOrderCount } = this.state;
-
+  const handleGenerateOrders = async () => {
     try {
       const {
         data: {
           loadOrders: payload
         }
-      } = await client.mutate({
+      } = await apolloClient.mutate({
         mutation: loadOrders,
         variables: {
           input: {
-            shopId: Reaction.getShopId(),
-            desiredOrderCount
+            shopId: currentShopId,
+            desiredOrderCount: parseInt(desiredOrderCount)
           }
         }
       });
 
-      this.setState({
-        isToastOpen: true,
-        toastMessage: `Successfully created ${payload.ordersCreated} order${payload.productsCreated > 1 ? "s" : ""}.`,
-        toastVariant: "success"
-      });
+      setIsToastOpen(true);
+      setToastMessage(`Successfully created ${payload.ordersCreated} order${payload.productsCreated > 1 ? "s" : ""}.`);
+      setToastVariant("success");
     } catch (err) {
-      this.setState({
-        isToastOpen: true,
-        toastMessage: err.message,
-        toastVariant: "error"
-      });
+      setIsToastOpen(true);
+      setToastMessage(err.message);
+      setToastVariant("error");
     }
   };
 
-  handleGenerateProductImages = async () => {
-    const { client } = this.props;
-
+  const handleGenerateProductImages = async () => {
     try {
       const {
         data: {
           loadProductImages: payload
         }
-      } = await client.mutate({
+      } = await apolloClient.mutate({
         mutation: loadProductImages,
         variables: {
           input: {
-            shopId: Reaction.getShopId()
+            shopId: currentShopId
           }
         }
       });
 
-      this.setState({
-        isToastOpen: true,
-        toastMessage: payload.wasDataLoaded ? "Successfully inserted product images." : "Couldn't insert product images.",
-        toastVariant: payload.wasDataLoaded ? "success" : "error"
-      });
+      setIsToastOpen(true);
+      setToastMessage(payload.wasDataLoaded ? "Successfully inserted product images." : "Couldn't insert product images.");
+      setToastVariant(payload.wasDataLoaded ? "success" : "error");
     } catch (err) {
-      this.setState({
-        isToastOpen: true,
-        toastMessage: err.message,
-        toastVariant: "error"
-      });
+      setIsToastOpen(true);
+      setToastMessage(err.message);
+      setToastVariant("error");
     }
   };
 
-  handleArmageddon = async () => {
-    const { client } = this.props;
-
+  const handleArmageddon = async () => {
     try {
       const {
         data: {
           removeAllData: payload
         }
-      } = await client.mutate({
+      } = await apolloClient.mutate({
         mutation: removeAllData,
         variables: {
           input: {
-            shopId: Reaction.getShopId()
+            shopId: currentShopId
           }
         }
       });
 
-      this.setState({
-        isToastOpen: true,
-        toastMessage: payload.wasDataRemoved ? "Successfully removed data." : "Couldn't remove any data.",
-        toastVariant: payload.wasDataRemoved ? "success" : "error"
-      });
+      setIsToastOpen(true);
+      setToastMessage(payload.wasDataRemoved ? "Successfully removed data." : "Couldn't remove any data.");
+      setToastVariant(payload.wasDataRemoved ? "success" : "error");
     } catch (err) {
-      this.setState({
-        isToastOpen: true,
-        toastMessage: err.message,
-        toastVariant: "error"
-      });
+      setIsToastOpen(true);
+      setToastMessage(err.message);
+      setToastVariant("error");
     }
   };
 
-  renderCards = () => (
+  return (
     <Fragment>
+      <PrimaryAppBar title="Dummy Data" />
+
       <Grid container spacing={1}>
         <Grid item sm={6}>
           <Card>
@@ -176,8 +161,8 @@ class DummyData extends Component {
                     label="Number of products"
                     type="number"
                     minValue={0}
-                    value={this.state.desiredProductCount}
-                    onChange={(event) => this.handleInputChange("desiredProductCount", event)}
+                    value={desiredProductCount}
+                    onChange={(event) => setDesiredProductCount(event.target.value)}
                   />
                 </Grid>
                 <Grid item sm={6}>
@@ -185,8 +170,8 @@ class DummyData extends Component {
                     label="Number of tags"
                     type="number"
                     minValue={0}
-                    value={this.state.desiredTagCount}
-                    onChange={(event) => this.handleInputChange("desiredTagCount", event)}
+                    value={desiredTagCount}
+                    onChange={(event) => setDesiredTagCount(event.target.value)}
                   />
                 </Grid>
               </Grid>
@@ -194,7 +179,7 @@ class DummyData extends Component {
             <CardActions>
               <Grid container alignItems="center" justify="flex-end">
                 <RightAlignedGrid item xs={12}>
-                  <Button color="primary" variant="outlined" onClick={this.handleGenerateProductsAndTags}>Generate Products and Tags</Button>
+                  <Button color="primary" variant="outlined" onClick={handleGenerateProductsAndTags}>Generate Products and Tags</Button>
                 </RightAlignedGrid>
               </Grid>
             </CardActions>
@@ -209,14 +194,14 @@ class DummyData extends Component {
                 label="Number of orders"
                 type="number"
                 minValue={0}
-                value={this.state.desiredOrderCount}
-                onChange={(event) => this.handleInputChange("desiredOrderCount", event)}
+                value={desiredOrderCount}
+                onChange={(event) => setDesiredOrderCount(event.target.value)}
               />
             </CardContent>
             <CardActions>
               <Grid container alignItems="center" justify="flex-end">
                 <RightAlignedGrid item xs={12}>
-                  <Button color="primary" variant="outlined" onClick={this.handleGenerateOrders}>Generate Orders</Button>
+                  <Button color="primary" variant="outlined" onClick={handleGenerateOrders}>Generate Orders</Button>
                 </RightAlignedGrid>
               </Grid>
             </CardActions>
@@ -234,7 +219,7 @@ class DummyData extends Component {
             <CardActions>
               <Grid container alignItems="center" justify="flex-end">
                 <RightAlignedGrid item xs={12}>
-                  <Button color="primary" variant="outlined" onClick={this.handleGenerateProductImages}>Generate Product Images</Button>
+                  <Button color="primary" variant="outlined" onClick={handleGenerateProductImages}>Generate Product Images</Button>
                 </RightAlignedGrid>
               </Grid>
             </CardActions>
@@ -245,12 +230,12 @@ class DummyData extends Component {
           <Card>
             <CardHeader title="Armageddon" />
             <CardContent>
-              <p>Beware: this will erase the content of the Products, Catalog, Tags and Orders collections for shop {Reaction.getShopId()}.</p>
+              <p>Beware: this will erase the content of the Products, Catalog, Tags and Orders collections for shop {currentShopId}.</p>
             </CardContent>
             <CardActions>
               <Grid container alignItems="center" justify="flex-end">
                 <RightAlignedGrid item xs={12}>
-                  <Button color="error" variant="contained" onClick={this.handleArmageddon}>Delete All Data</Button>
+                  <Button color="error" variant="contained" onClick={handleArmageddon}>Delete All Data</Button>
                 </RightAlignedGrid>
               </Grid>
             </CardActions>
@@ -285,25 +270,15 @@ class DummyData extends Component {
           </Card>
         </Grid>
       </Grid>
+
+      <Toast
+        open={isToastOpen}
+        onClose={() => setIsToastOpen(false)}
+        message={toastMessage}
+        variant={toastVariant}
+      />
     </Fragment>
   );
-
-  render() {
-    return (
-      <Fragment>
-        <PrimaryAppBar title="Dummy Data" />
-
-        {this.renderCards()}
-
-        <Toast
-          open={this.state.isToastOpen}
-          onClose={this.handleCloseToast}
-          message={this.state.toastMessage}
-          variant={this.state.toastVariant}
-        />
-      </Fragment>
-    );
-  }
 }
 
 export default DummyData;
