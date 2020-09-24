@@ -1,6 +1,6 @@
 {
   "name": "reaction-dummy-data-ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "User interface for reaction-dummy-data",
   "main": "index.js",
   "scripts": {
