@@ -38,7 +38,7 @@ function DummyData() {
       }
     }
 
-    if (currentOpaqueShopId.length > 0) {
+    if (currentOpaqueShopId && currentOpaqueShopId.length > 0) {
       decodeAndSetShopId(currentOpaqueShopId);
     }
   }, [currentOpaqueShopId]);
